@@ -1,0 +1,42 @@
+{
+  "name": "yapify-backend-2.o",
+  "version": "1.0.0",
+  "description": "Just trying to cook lets see if i cook or get cooked hope the prev one",
+  "homepage": "https://github.com/Ankit-Silwal/yapify-backend-2.O#readme",
+  "bugs": {
+    "url": "https://github.com/Ankit-Silwal/yapify-backend-2.O/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ankit-Silwal/yapify-backend-2.O.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "module",
+  "main": "index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon --exec bun index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@types/pg": "^8.16.0",
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.4",
+    "express": "^5.2.1",
+    "nodemon": "^3.1.11",
+    "pg": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.2.3",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  }
+}
