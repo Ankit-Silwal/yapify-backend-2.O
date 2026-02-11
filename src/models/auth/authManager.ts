@@ -23,8 +23,6 @@ export const registerUsers = async (req: Request<{}, {}, RegisterRequestBody>, r
       message: "Please provide all the required credentials: userName, email, password, conformPassword"
     });
   }
-  
-  // Type narrowing: TypeScript now knows these strings are defined
   if (password !== conformPassword) {
     return res.status(400).json({
       success: false,
@@ -58,16 +56,73 @@ export const registerUsers = async (req: Request<{}, {}, RegisterRequestBody>, r
 
   } catch (err) {
     console.error("Error registering user:", err);
-    
-    // Safely checking error code
     const dbError = err as DatabaseError;
-    if (dbError.code === '23505') { // Unique violation error code for Postgres
+    if (dbError.code === '23505') { 
       return res.status(409).json({
         success: false,
         message: "Email or Username already exists"
       });
     }
     
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
+};
+interface LoginRequestBody {
+  email?: string;
+  password?: string;
+}
+
+export const loginUser = async (req: Request<{}, {}, LoginRequestBody>, res: Response): Promise<Response> => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Please provide both the email and the password"
+    });
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT id, email, password_hash
+       FROM users
+       WHERE email = $1`,
+      [email]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+
+    if (!isMatch) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password"
+      });
+    }
+
+    // TODO: Generate JWT token here in the future
+    
+    return res.status(200).json({
+      success: true,
+      message: "Successfully logged in :)",
+      user: {
+        id: user.id,
+        email: user.email
+      }
+    });
+
+  } catch (err) {
+    console.error("Error logging in:", err);
     return res.status(500).json({
       success: false,
       message: "Internal server error"
