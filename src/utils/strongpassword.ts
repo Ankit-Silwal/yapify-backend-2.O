@@ -9,10 +9,10 @@ export function checkStrongPassword(password: string): { isStrong: boolean; erro
   if (!/[a-z]/.test(password)) {
     errors.push("Password must contain at least one lowercase letter");
   }
-  if (!/[0-9]/.test(password)) {
+  if (!/\d/.test(password)) {
     errors.push("Password must contain at least one number");
   }
-  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+  if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>?]/.test(password)) {
     errors.push("Password must contain at least one special character");
   }
   
