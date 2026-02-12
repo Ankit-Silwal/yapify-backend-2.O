@@ -226,12 +226,6 @@ export async function resendOtp(req: Request, res: Response): Promise<Response> 
   });
 }
 
-// Test accounts configuration
-const TEST_ACCOUNTS = [
-  { username: "test1", email: "test1@gmail.com", password: "password", id: 999991 },
-  { username: "test2", email: "test2@gmail.com", password: "password", id: 999992 }
-];
-
 export const loginUser = async (
   req: Request,
   res: Response
@@ -244,26 +238,6 @@ export const loginUser = async (
     });
   }
   
-  // Check if it's a test account
-  const testAccount = TEST_ACCOUNTS.find(acc => acc.email === email || acc.username === email);
-  if (testAccount?.password === password) {
-    const sessionId = await createSession(String(testAccount.id), req);
-    res.cookie("sessionId", sessionId, {
-      httpOnly: true,
-      secure: false,
-      sameSite: "lax",
-      maxAge: 24 * 60 * 60 * 1000,
-    });
-    return res.status(200).json({
-      success: true,
-      message: "Successfully logged in (TEST ACCOUNT):)",
-      user: {
-        id: testAccount.id,
-        email: testAccount.email,
-        username: testAccount.username
-      },
-    });
-  }
   const result = await pool.query(
     `SELECT id, email, username, password_hash, is_verified
      FROM users
@@ -273,7 +247,7 @@ export const loginUser = async (
   if (result.rows.length === 0) {
     return res.status(400).json({
       success: false,
-      message: "Invalid email or password ",
+      message: "Invalid email or password",
     });
   }
   const user = result.rows[0];
@@ -287,19 +261,19 @@ export const loginUser = async (
   if (!user.is_verified) {
     return res.status(400).json({
       success: false,
-      message: "This email isnt verified please verify this email",
+      message: "This email isn't verified please verify this email",
     });
   }
   const sessionId = await createSession(String(user.id), req);
   res.cookie("sessionId", sessionId, {
     httpOnly: true,
-    secure: false, // Set to false for HTTP localhost
-    sameSite: "lax", // Lax is better for localhost dev than strict usually
+    secure: false,
+    sameSite: "lax",
     maxAge: 24 * 60 * 60 * 1000,
   });
   return res.status(200).json({
     success: true,
-    message: "Successfully logged in:)",
+    message: "Successfully logged in",
     user: {
       id: user.id,
       email: user.email,
