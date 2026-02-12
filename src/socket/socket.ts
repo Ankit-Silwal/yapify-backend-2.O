@@ -1,25 +1,25 @@
-import jwt from "jsonwebtoken";
+import cookie from "cookie";
 import { Server, Socket } from "socket.io";
 import { checkUserInConversation,createMessage } from "../services/chat.services.js";
+import { getSession } from "../models/auth/sessionManager.js";
 export const registerSocketHandlers = (io: Server) => {
 
-  io.use((socket: Socket, next) => {
-    const token = socket.handshake.auth.token;
-    if (!token) {
+  io.use(async (socket: Socket, next) => {
+    const cookieHeader=socket.handshake.headers.cookie;
+    if(!cookieHeader){
+      return next(new Error("No cookie found"));
+    }
+    const cookies=cookie.parse(cookieHeader);
+    const sessionId=cookies.sessionId;
+    if(!sessionId){
       return next(new Error("Unauthorized"));
     }
-    try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET as string
-      ) as { id: string };
-
-      socket.data.userId = decoded.id;
-      next();
-    } catch (error: any) {
-      console.error("Socket authentication error:", error.message);
-      next(new Error("Invalid token"));
+    const session=await getSession(sessionId);
+    if(!session){
+      return next(new Error("Invalid Session"));
     }
+    socket.data.userId=session.userId;
+    next();
   });
 
   io.on("connection", (socket: Socket) => {

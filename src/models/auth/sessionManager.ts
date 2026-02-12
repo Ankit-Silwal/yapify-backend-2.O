@@ -231,3 +231,18 @@ export async function removeSpecificSession(
     message: `Session ${sessionId} not found`
   };
 }
+
+export async function getSession(sessionId: string) {
+  if (!sessionId) return null;
+
+  if (isRedisConnected()) {
+    const sessionKey = `session:${sessionId}`;
+    const raw = await REDIS_CLIENT.get(sessionKey);
+
+    if (!raw) return null;
+
+    return JSON.parse(raw);
+  } else {
+    return inMemorySessions.get(sessionId) ?? null;
+  }
+}
