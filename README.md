@@ -1,3 +1,50 @@
+---
+
+## 🔌 Socket.IO Features
+
+The backend uses Socket.IO for real-time messaging and conversation updates. Below are the main features and events:
+
+### Socket Connection
+
+- **Authentication**: Uses session cookies for authentication. If the session is invalid or missing, the connection is rejected.
+- **User Room Join**: On connection, the user is joined to a room with their user ID and all their conversation rooms.
+
+### Events
+
+- **send-message**
+  - **Client → Server**
+  - Payload: `{ conversationId: string, content: string }`
+  - Checks if the user is a member of the conversation.
+  - If authorized, creates a message and emits `new-message` to the conversation room.
+  - If unauthorized, emits `error` to the sender.
+
+- **new-message**
+  - **Server → Clients in conversation room**
+  - Payload: Message object (see API response for message format)
+  - Notifies all users in the conversation of a new message.
+
+- **error**
+  - **Server → Client**
+  - Payload: Error message string
+  - Emitted on authentication or message errors.
+
+### Example Usage
+
+```js
+const socket = io('http://localhost:3000', { withCredentials: true });
+socket.on('connect', () => {
+  console.log('Connected!');
+});
+socket.emit('send-message', { conversationId: 'abc123', content: 'Hello!' });
+socket.on('new-message', (msg) => {
+  console.log('New message:', msg);
+});
+socket.on('error', (err) => {
+  console.error('Socket error:', err);
+});
+```
+
+---
 # Yapify Backend 2.0 API Documentation
 
 A WhatsApp clone backend with TypeScript, Express, PostgreSQL, and Redis.

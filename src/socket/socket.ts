@@ -1,6 +1,6 @@
 import cookie from "cookie";
 import { Server, Socket } from "socket.io";
-import { checkUserInConversation,createMessage } from "../services/chat.services.js";
+import { checkUserInConversation,createMessage, getUserConversations } from "../services/chat.services.js";
 import { getSession } from "../models/auth/sessionManager.js";
 export const registerSocketHandlers = (io: Server) => {
 
@@ -22,25 +22,59 @@ export const registerSocketHandlers = (io: Server) => {
     next();
   });
 
-  io.on("connection", (socket: Socket) => {
+  io.on("connection", async(socket: Socket) => {
     const userId=socket.data.userId;
     console.log("User connected:", socket.data.userId);
     socket.join(userId);
-
-
-    socket.on("send-message",async (data)=>{
-      const userId=socket.data.userId;
-      const {conversationId,content}=data;
-
-      const isMember=await checkUserInConversation(userId,conversationId);
-      if(!isMember){
-        return socket.emit("error","Unauthorized");
-      }
-      const message=await createMessage(conversationId, userId, content);
-      io.to(conversationId).emit("new-message",message);
+    const conversations=await getUserConversations(userId);
+    conversations.forEach((row)=>{
+      socket.join(row.conversation_id);
     })
-    socket.on("disconnect", () => {
-      console.log("User disconnected:", socket.data.userId);
+
+    socket.on("send-message", async (data) => {
+      try {
+        const userId = socket.data.userId;
+        const { conversationId, content } = data;
+
+        const isMember = await checkUserInConversation(
+          userId,
+          conversationId
+        );
+
+        if (!isMember) {
+          return socket.emit("error", "Unauthorized");
+        }
+
+        const message = await createMessage(
+          conversationId,
+          userId,
+          content
+        )
+        io.to(conversationId).emit("new-message", message);
+
+      } catch (error) {
+        console.error("Message error:", error);
+        socket.emit("error", "Message failed");
+      }
     });
+
+    socket.on("typing-start",(data)=>{
+      const userId=socket.data.userId;
+      const {conversationId}=data;
+
+      socket.to(conversationId).emit("user-typing",{
+        userId,
+        conversationId
+      })
+    })
+
+    socket.on("typing-stop",(data)=>{
+      const userId=socket.data.userId;
+      const {conversationId}=data;
+      socket.to(conversationId).emit("user-stop-typing",{
+        userId,
+        conversationId
+      })
+    })
   });
 };

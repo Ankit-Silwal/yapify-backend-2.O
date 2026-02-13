@@ -27,7 +27,6 @@ export async function checkSession(
         sessionData = JSON.parse(data);
       }
     } else if (hasInMemorySession(sessionId)) {
-      // Use in-memory fallback
       sessionData = getInMemorySession(sessionId);
     }
 
@@ -38,8 +37,6 @@ export async function checkSession(
       });
       return;
     }
-
-    // Attach userId to request
     req.userId = sessionData.userId;
     next();
   } catch (error: any) {
