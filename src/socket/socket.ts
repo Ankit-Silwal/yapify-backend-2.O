@@ -1,5 +1,6 @@
 import cookie from "cookie";
 import { Server, Socket } from "socket.io";
+import REDIS_CLIENT from "../config/redis.js";
 import { checkUserInConversation,createMessage, getUserConversations, markMessageAsRead, updateMessageStatus } from "../services/chat.services.js";
 import { getSession } from "../models/auth/sessionManager.js";
 export const registerSocketHandlers = (io: Server) => {
@@ -24,7 +25,9 @@ export const registerSocketHandlers = (io: Server) => {
 
   io.on("connection", async(socket: Socket) => {
     const userId=socket.data.userId;
+    await REDIS_CLIENT.set(`online:${userId}`,"true");
     console.log("User connected:", socket.data.userId);
+    socket.broadcast.emit("user-online",{userId});
     socket.join(userId);
     const conversations=await getUserConversations(userId);
     conversations.forEach((row)=>{
@@ -79,7 +82,7 @@ export const registerSocketHandlers = (io: Server) => {
       })
     })
 
-    socket.on("message-deliverd",async (data)=>{
+    socket.on("message-delivered",async (data)=>{
       try {
         const userId = socket.data.userId;
         const { messageId, conversationId } = data;
@@ -119,5 +122,13 @@ export const registerSocketHandlers = (io: Server) => {
         console.error("Read receipt error:",error);
       }
     })
+    socket.on("disconnect", async () => {
+      const userId = socket.data.userId;
+      await REDIS_CLIENT.del(`online:${userId}`);
+      socket.broadcast.emit("User-offline",{
+        userId
+      })
+      console.log("User offline:", userId);
+    });
   });
 };
