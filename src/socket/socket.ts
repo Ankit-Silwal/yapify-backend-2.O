@@ -1,6 +1,6 @@
 import cookie from "cookie";
 import { Server, Socket } from "socket.io";
-import { checkUserInConversation,createMessage, getUserConversations, updateMessageStatus } from "../services/chat.services.js";
+import { checkUserInConversation,createMessage, getUserConversations, markMessageAsRead, updateMessageStatus } from "../services/chat.services.js";
 import { getSession } from "../models/auth/sessionManager.js";
 export const registerSocketHandlers = (io: Server) => {
 
@@ -95,5 +95,29 @@ export const registerSocketHandlers = (io: Server) => {
         console.error("Delivery update error:", error);
       }
     });
+
+    socket.on("messages-read",async(data)=>{
+      try{
+        const userId=socket.data.userId;
+        const {conversationId,messageIds}=data;
+
+        const isMember=await checkUserInConversation(
+          userId,
+          conversationId
+        );
+        if(!isMember){
+          return;
+        }
+
+        await markMessageAsRead(messageIds,userId);
+
+        socket.to(conversationId).emit("messages-read-update",{
+          messageIds,
+          userId
+        })
+      }catch(error){
+        console.error("Read receipt error:",error);
+      }
+    })
   });
 };

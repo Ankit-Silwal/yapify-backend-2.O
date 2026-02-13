@@ -90,3 +90,20 @@ export const updateMessageStatus=async (
     `,[status,messageId,userId]
   )
 }
+
+export const markMessageAsRead=async(
+  messageIds:string[],
+  userId:string
+)=>{
+  if(!messageIds || messageIds.length===0) return;
+
+  await pool.query(
+    `
+    update message_status
+    set status="read",
+    updated_at=now()
+    where message_id=any($1)
+    and user_id=$2
+    `,[messageIds,userId]
+  )
+}
