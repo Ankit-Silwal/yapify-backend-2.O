@@ -2,7 +2,7 @@
 
 ## 🔌 Socket.IO Features
 
-The backend uses Socket.IO for real-time messaging and conversation updates. Below are the main features and events:
+The backend uses Socket.IO for real-time messaging, typing indicators, and message delivery status. Below are the main features and events:
 
 ### Socket Connection
 
@@ -23,6 +23,24 @@ The backend uses Socket.IO for real-time messaging and conversation updates. Bel
   - Payload: Message object (see API response for message format)
   - Notifies all users in the conversation of a new message.
 
+- **typing**
+  - **Client → Server**
+  - Payload: `{ conversationId: string }`
+  - Notifies others in the conversation that the user is typing.
+  - Server emits `user-typing` to other users in the conversation: `{ userId, conversationId }`
+
+- **typing-stop**
+  - **Client → Server**
+  - Payload: `{ conversationId: string }`
+  - Notifies others in the conversation that the user stopped typing.
+  - Server emits `user-stop-typing` to other users in the conversation: `{ userId, conversationId }`
+
+- **message-deliverd**
+  - **Client → Server**
+  - Payload: `{ messageId: string, conversationId: string }`
+  - Marks a message as delivered for the user.
+  - Server emits `message-status-updated` to the conversation room: `{ messageId, userId, status: "delivered" }`
+
 - **error**
   - **Server → Client**
   - Payload: Error message string
@@ -38,6 +56,18 @@ socket.on('connect', () => {
 socket.emit('send-message', { conversationId: 'abc123', content: 'Hello!' });
 socket.on('new-message', (msg) => {
   console.log('New message:', msg);
+});
+socket.emit('typing', { conversationId: 'abc123' });
+socket.on('user-typing', (data) => {
+  console.log('User typing:', data);
+});
+socket.emit('typing-stop', { conversationId: 'abc123' });
+socket.on('user-stop-typing', (data) => {
+  console.log('User stopped typing:', data);
+});
+socket.emit('message-deliverd', { messageId: 'xyz789', conversationId: 'abc123' });
+socket.on('message-status-updated', (data) => {
+  console.log('Message status updated:', data);
 });
 socket.on('error', (err) => {
   console.error('Socket error:', err);

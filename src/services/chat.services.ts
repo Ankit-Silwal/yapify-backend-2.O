@@ -74,3 +74,19 @@ export const createMessage = async (
     client.release();
   }
 };
+
+export const updateMessageStatus=async (
+  messageId:string,
+  userId:string,
+  status:string
+)=>{
+  await pool.query(
+    `
+    update message_status
+    set status=$1
+    updated_at=now()
+    where message_id=$2
+    and user_id=$3
+    `,[status,messageId,userId]
+  )
+}

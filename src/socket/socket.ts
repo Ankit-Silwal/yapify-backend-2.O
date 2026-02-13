@@ -1,6 +1,6 @@
 import cookie from "cookie";
 import { Server, Socket } from "socket.io";
-import { checkUserInConversation,createMessage, getUserConversations } from "../services/chat.services.js";
+import { checkUserInConversation,createMessage, getUserConversations, updateMessageStatus } from "../services/chat.services.js";
 import { getSession } from "../models/auth/sessionManager.js";
 export const registerSocketHandlers = (io: Server) => {
 
@@ -31,6 +31,8 @@ export const registerSocketHandlers = (io: Server) => {
       socket.join(row.conversation_id);
     })
 
+
+   
     socket.on("send-message", async (data) => {
       try {
         const userId = socket.data.userId;
@@ -76,5 +78,22 @@ export const registerSocketHandlers = (io: Server) => {
         conversationId
       })
     })
+
+    socket.on("message-deliverd",async (data)=>{
+      try {
+        const userId = socket.data.userId;
+        const { messageId, conversationId } = data;
+
+        await updateMessageStatus(messageId, userId, "delivered");
+
+        io.to(conversationId).emit("message-status-updated", {
+          messageId,
+          userId,
+          status: "delivered"
+        });
+      } catch (error) {
+        console.error("Delivery update error:", error);
+      }
+    });
   });
 };
