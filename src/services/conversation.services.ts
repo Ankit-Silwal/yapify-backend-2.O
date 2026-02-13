@@ -51,4 +51,27 @@ export const createPrivateConversation=async(
     client.release();
   }
 }
+export const getUserConversationsList = async (userId: string) => {
+
+  const result = await pool.query(
+    `
+    SELECT c.id,
+           c.is_group,
+           MAX(m.created_at) as last_message_time
+    FROM conversations c
+    JOIN conversation_participants cp
+      ON cp.conversation_id = c.id
+    LEFT JOIN messages m
+      ON m.conversation_id = c.id
+    WHERE cp.user_id = $1
+      AND cp.deleted_at IS NULL
+    GROUP BY c.id
+    ORDER BY last_message_time DESC NULLS LAST
+    `,
+    [userId]
+  );
+
+  return result.rows;
+};
+
 

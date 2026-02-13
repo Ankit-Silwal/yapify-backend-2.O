@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { findPrivateConversation,createPrivateConversation } from "./conversation.services.js";
+import { findPrivateConversation,createPrivateConversation,getUserConversationsList } from "./conversation.services.js";
 
 const router=Router();
 
@@ -31,5 +31,15 @@ router.post('/private',async (req,res)=>{
     conversationId
   })
 })
+
+router.get("/", async (req, res) => {
+
+  const userId = req.userId;
+
+  const conversations = await getUserConversationsList(userId as string);
+
+  res.json(conversations);
+});
+
 export default router;
 
