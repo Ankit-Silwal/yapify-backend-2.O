@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { findPrivateConversation,createPrivateConversation,getUserConversationsList } from "./conversation.services.js";
+import { findPrivateConversation,createPrivateConversation,getUserConversationsList,getMessages } from "./conversation.services.js";
 
 const router=Router();
 
@@ -40,6 +40,16 @@ router.get("/", async (req, res) => {
 
   res.json(conversations);
 });
+router.get("/:conversationId", async (req, res) => {
+
+  const { conversationId } = req.params;
+  const page = Number(req.query.page) || 1;
+
+  const messages = await getMessages(conversationId, page);
+
+  res.json(messages);
+});
+
 
 export default router;
 

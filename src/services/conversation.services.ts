@@ -73,5 +73,26 @@ export const getUserConversationsList = async (userId: string) => {
 
   return result.rows;
 };
+export const getMessages = async (
+  conversationId: string,
+  page: number = 1,
+  limit: number = 20
+) => {
+
+  const offset = (page - 1) * limit;
+
+  const result = await pool.query(
+    `
+    SELECT *
+    FROM messages
+    WHERE conversation_id = $1
+    ORDER BY created_at DESC
+    LIMIT $2 OFFSET $3
+    `,
+    [conversationId, limit, offset]
+  );
+
+  return result.rows;
+};
 
 
