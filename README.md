@@ -282,6 +282,75 @@ Errors:
 
 ---
 
+
+## 💬 Conversation Service Endpoints
+
+### 1. Find Private Conversation
+**GET** `/conversations/private?userId1=<id>&userId2=<id>`
+
+Finds a private conversation between two users. Returns the conversation ID if found, otherwise null.
+
+**Response Example:**
+```json
+{
+  "id": 123
+}
+```
+
+### 2. Create Private Conversation
+**POST** `/conversations/private`
+
+Creates a new private conversation between two users.
+
+**Request:**
+```json
+{
+  "userId1": "string",
+  "userId2": "string"
+}
+```
+**Response:**
+```json
+{
+  "conversationId": 123
+}
+```
+
+### 3. Get User Conversations List
+**GET** `/conversations?userId=<id>`
+
+Returns a list of conversations for a user, ordered by last message time.
+
+**Response Example:**
+```json
+[
+  {
+    "id": 123,
+    "is_group": false,
+    "last_message_time": "2026-02-14T12:34:56.000Z"
+  }
+]
+```
+
+### 4. Get Messages
+**GET** `/conversations/:conversationId/messages?page=1&limit=20`
+
+Returns paginated messages for a conversation.
+
+**Response Example:**
+```json
+[
+  {
+    "id": 1,
+    "conversation_id": 123,
+    "sender_id": "user1",
+    "content": "Hello!",
+    "created_at": "2026-02-14T12:34:56.000Z"
+  }
+]
+```
+
+---
 ## 🔑 Forgot Password Flow
 
 ### 8. Request Password Reset
