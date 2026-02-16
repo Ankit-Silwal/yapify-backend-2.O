@@ -493,7 +493,43 @@ Errors:
 
 ---
 
-## 📝 Common Response Formats
+## � User Endpoints
+
+### 15. Search Users
+**GET** `/api/users/search?q=query` 🔒
+
+Search for users by username.
+
+```json
+Headers:
+Cookie: sessionId=<token>
+
+Query Parameters:
+q - The search query string (username)
+
+Success (200):
+[
+  {
+    "id": 1,
+    "username": "johndoe"
+  },
+  {
+    "id": 2,
+    "username": "johnsmith"
+  }
+]
+
+Empty Result:
+[]
+
+Errors:
+401 - Unauthorized
+500 - Internal Server Error
+```
+
+---
+
+## �📝 Common Response Formats
 
 ### Success Response
 ```json

@@ -231,56 +231,68 @@ export const loginUser = async (
   res: Response
 ): Promise<Response> => {
   const { email, password } = req.body as { email?: string; password?: string };
+  console.log("Login attempt:", { email, passwordPresent: !!password }); // Debug log
+
   if (!email || !password) {
+    console.log("Login failed: Missing email or password");
     return res.status(400).json({
       success: false,
       message: "Please provide both the email and the password",
     });
   }
   
-  const result = await pool.query(
-    `SELECT id, email, username, password_hash, is_verified
-     FROM users
-     WHERE email = $1`,
-    [email]
-  );
-  if (result.rows.length === 0) {
-    return res.status(400).json({
-      success: false,
-      message: "Invalid email or password",
+  try {
+    const result = await pool.query(
+      `SELECT id, email, username, password_hash, is_verified, is_verified
+       FROM users
+       WHERE email = $1`,
+      [email]
+    );
+    if (result.rows.length === 0) {
+      console.log("Login failed: User not found");
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+    const user = result.rows[0];
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) {
+      console.log("Login failed: Password mismatch");
+      return res.status(400).json({
+        success: false,
+        message: "The password didn't match", // Consider changing to generic message in prod
+      });
+    }
+    if (!user.is_verified) {
+      console.log("Login failed: User not verified");
+      return res.status(400).json({
+        success: false,
+        message: "This email isn't verified please verify this email",
+      });
+    }
+    const sessionId = await createSession(String(user.id), req);
+    res.cookie("sessionId", sessionId, {
+      httpOnly: true,
+      secure: false, 
+      sameSite: "lax",
+      maxAge: 24 * 60 * 60 * 1000,
     });
-  }
-  const user = result.rows[0];
-  const isMatch = await bcrypt.compare(password, user.password_hash);
-  if (!isMatch) {
-    return res.status(400).json({
-      success: false,
-      message: "The password didn't match",
+    
+    console.log("Login successful for user:", user.email);
+    return res.status(200).json({
+      success: true,
+      message: "Successfully logged in",
+      user: {
+        id: user.id,
+        email: user.email,
+        username: user.username
+      },
     });
+  } catch (err) {
+    console.error("Login error:", err);
+    return res.status(500).json({ success: false, message: "Internal server error" });
   }
-  if (!user.is_verified) {
-    return res.status(400).json({
-      success: false,
-      message: "This email isn't verified please verify this email",
-    });
-  }
-  const sessionId = await createSession(String(user.id), req);
-  res.cookie("sessionId", sessionId, {
-    httpOnly: true,
-    secure: false,
-    sameSite: "lax",
-    maxAge: 24 * 60 * 60 * 1000,
-  });
-  
-  return res.status(200).json({
-    success: true,
-    message: "Successfully logged in",
-    user: {
-      id: user.id,
-      email: user.email,
-      username: user.username
-    },
-  });
 };
 
 export async function changePassword(

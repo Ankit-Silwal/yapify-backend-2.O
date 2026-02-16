@@ -8,11 +8,12 @@ dotenv.config();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "*",
+    origin: ["http://localhost:5173", "http://localhost:3000"],
+    credentials: true,
   },
 });
 registerSocketHandlers(io);
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8000;
 httpServer.listen(port, () => {
   console.log(`Server running at port ${port}`);
 });
