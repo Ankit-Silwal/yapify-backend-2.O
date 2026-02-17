@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { findPrivateConversation,createPrivateConversation,getUserConversationsList,getMessages } from "./conversation.services.js";
+import { findPrivateConversation,createPrivateConversation,getUserConversationsList,getMessages, getConversationDetails } from "./conversation.services.js";
 import { checkSession } from "../middleware/checkSession.js";
 
 const router=Router();
@@ -32,8 +32,8 @@ router.post('/private', checkSession, async (req,res)=>{
     conversationId
   })
 })
-checkSession, 
-router.get("/", async (req, res) => {
+
+router.get("/", checkSession, async (req, res) => {
 
   const userId = req.userId;
 
@@ -41,6 +41,51 @@ router.get("/", async (req, res) => {
 
   res.json(conversations);
 });
+
+router.get("/:conversationId/details", checkSession, async (req, res) => {
+  try {
+    const userId = req.userId as string;
+    const { conversationId } = req.params;
+
+    const conversation = await getConversationDetails(conversationId, userId);
+
+    if (!conversation) {
+      return res.status(403).json({
+        message: "Unauthorized or conversation not found"
+      });
+    }
+
+    res.json(conversation);
+  } catch (error) {
+    console.error("Get conversation details error:", error);
+    res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+});
+
+router.get("/:conversationId/details", checkSession, async (req, res) => {
+  try {
+    const userId = req.userId as string;
+    const { conversationId } = req.params;
+
+    const conversation = await getConversationDetails(conversationId, userId);
+
+    if (!conversation) {
+      return res.status(403).json({
+        message: "Unauthorized or conversation not found"
+      });
+    }
+
+    res.json(conversation);
+  } catch (error) {
+    console.error("Get conversation details error:", error);
+    res.status(500).json({
+      message: "Internal server error"
+    });
+  }
+});
+
 router.get("/:conversationId", checkSession, async (req, res) => {
 
   const { conversationId } = req.params;

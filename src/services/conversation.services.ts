@@ -95,4 +95,64 @@ export const getMessages = async (
   return result.rows;
 };
 
+export const getConversationDetails = async (conversationId: string, userId: string) => {
+  // 1️⃣ Check if user is participant
+  const participantCheck = await pool.query(
+    `
+    SELECT 1
+    FROM conversation_participants
+    WHERE conversation_id = $1
+    AND user_id = $2
+    `,
+    [conversationId, userId]
+  );
+
+  if (participantCheck.rowCount === 0) {
+    return null; // Or throw an error indicating unauthorized/not found
+  }
+
+  // 2️⃣ Get conversation info
+  const conversationResult = await pool.query(
+    `
+    SELECT id, is_group
+    FROM conversations
+    WHERE id = $1
+    `,
+    [conversationId]
+  );
+
+  if (conversationResult.rowCount === 0) {
+    throw new Error("Conversation not found");
+  }
+
+  const conversation = conversationResult.rows[0];
+
+  // 3️⃣ If private chat → get other user
+  if (!conversation.is_group) {
+    const otherUserResult = await pool.query(
+      `
+      SELECT u.id, u.username
+      FROM conversation_participants cp
+      JOIN users u ON u.id = cp.user_id
+      WHERE cp.conversation_id = $1
+      AND cp.user_id != $2
+      LIMIT 1
+      `,
+      [conversationId, userId]
+    );
+
+    return {
+      id: conversation.id,
+      is_group: false,
+      other_user: otherUserResult.rows[0],
+    };
+  }
+
+  // 4️⃣ If group (basic version)
+  return {
+    id: conversation.id,
+    is_group: true,
+  };
+};
+
 
