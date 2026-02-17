@@ -110,7 +110,7 @@ npm run dev
 
 ## 📚 API Endpoints
 
-Base URL: `http://localhost:3000`
+Base URL: `http://localhost:8000`
 
 ### Health Check
 
@@ -124,7 +124,7 @@ Response: { "success": true, "health": "fit as fuck sir" }
 ## 🔐 Authentication Endpoints
 
 ### 1. Register User
-**POST** `/auth/register`
+**POST** `/api/auth/register`
 
 Creates a new user and sends OTP to email.
 
@@ -151,7 +151,7 @@ Errors:
 ```
 
 ### 2. Verify Email
-**POST** `/auth/verify`
+**POST** `/api/auth/verify`
 
 Verifies email with OTP (5-minute expiry).
 
@@ -174,7 +174,7 @@ Errors:
 ```
 
 ### 3. Resend OTP
-**POST** `/auth/resend-otp`
+**POST** `/api/auth/resend-otp`
 
 ```json
 Request:
@@ -189,7 +189,7 @@ Errors:
 ```
 
 ### 4. Verify Resent OTP
-**POST** `/auth/verify-resend-otp`
+**POST** `/api/auth/verify-resend-otp`
 
 ```json
 Request:
@@ -200,7 +200,7 @@ Success (200):
 ```
 
 ### 5. Login
-**POST** `/auth/login`
+**POST** `/api/auth/login`
 
 Authenticates user and creates session (24-hour cookie).
 
@@ -231,7 +231,7 @@ Test Accounts (Dev):
 ```
 
 ### 6. Get Current User
-**GET** `/auth/me` 🔒
+**GET** `/api/auth/me` 🔒
 
 Requires authentication cookie.
 
@@ -256,7 +256,7 @@ Errors:
 ```
 
 ### 7. Change Password
-**POST** `/auth/change-password` 🔒
+**POST** `/api/auth/change-password` 🔒
 
 Changes password for authenticated user.
 
@@ -285,28 +285,15 @@ Errors:
 
 ## 💬 Conversation Service Endpoints
 
-### 1. Find Private Conversation
-**GET** `/conversations/private?userId1=<id>&userId2=<id>`
+### 1. Create or Find Private Conversation
+**POST** `/api/conversation/private`
 
-Finds a private conversation between two users. Returns the conversation ID if found, otherwise null.
-
-**Response Example:**
-```json
-{
-  "id": 123
-}
-```
-
-### 2. Create Private Conversation
-**POST** `/conversations/private`
-
-Creates a new private conversation between two users.
+Creates a new private conversation between the current user and target user, or returns existing one.
 
 **Request:**
 ```json
 {
-  "userId1": "string",
-  "userId2": "string"
+  "targetUserId": "string"
 }
 ```
 **Response:**
@@ -316,8 +303,8 @@ Creates a new private conversation between two users.
 }
 ```
 
-### 3. Get User Conversations List
-**GET** `/conversations?userId=<id>`
+### 2. Get User Conversations List
+**GET** `/api/conversation`
 
 Returns a list of conversations for a user, ordered by last message time.
 
@@ -332,8 +319,8 @@ Returns a list of conversations for a user, ordered by last message time.
 ]
 ```
 
-### 4. Get Messages
-**GET** `/conversations/:conversationId/messages?page=1&limit=20`
+### 3. Get Messages
+**GET** `/api/conversation/:conversationId?page=1`
 
 Returns paginated messages for a conversation.
 
@@ -354,7 +341,7 @@ Returns paginated messages for a conversation.
 ## 🔑 Forgot Password Flow
 
 ### 8. Request Password Reset
-**POST** `/auth/forgot-password`
+**POST** `/api/auth/forgot-password`
 
 Sends OTP to email for password reset.
 
@@ -370,7 +357,7 @@ Errors:
 ```
 
 ### 9. Verify Forgot Password OTP
-**POST** `/auth/verify-forgot-password`
+**POST** `/api/auth/verify-forgot-password`
 
 Verifies OTP and grants 5-minute window to change password.
 
@@ -390,7 +377,7 @@ Errors:
 ```
 
 ### 10. Resend Forgot Password OTP
-**POST** `/auth/resend-forgot-password-otp`
+**POST** `/api/auth/resend-forgot-password-otp`
 
 ```json
 Request:
@@ -401,7 +388,7 @@ Success (200):
 ```
 
 ### 11. Verify Resent Forgot Password OTP
-**POST** `/auth/verify-resend-forgot-password`
+**POST** `/api/auth/verify-resend-forgot-password`
 
 ```json
 Request:
@@ -415,7 +402,7 @@ Success (200):
 ```
 
 ### 12. Change Forgot Password
-**POST** `/auth/change-forgot-password`
+**POST** `/api/auth/change-forgot-password`
 
 Sets new password (must be within 5-minute window after OTP verification).
 
@@ -441,7 +428,7 @@ Errors:
 ## 🖥️ Session Management
 
 ### 13. Get All Sessions
-**GET** `/auth/sessions` 🔒
+**GET** `/api/auth/sessions` 🔒
 
 Returns all active sessions for current user.
 
@@ -469,7 +456,7 @@ Errors:
 ```
 
 ### 14. Delete Specific Session
-**DELETE** `/auth/sessions/:sessionId` 🔒
+**DELETE** `/api/auth/sessions/:sessionId` 🔒
 
 Logs out from specific device.
 
@@ -477,7 +464,7 @@ Logs out from specific device.
 Headers:
 Cookie: sessionId=<token>
 
-URL: /auth/sessions/abc123def456
+URL: /api/auth/sessions/abc123def456
 
 Success (200):
 {
@@ -588,18 +575,18 @@ Set automatically on login. Expires after 24 hours.
 
 ```bash
 # Register
-curl -X POST http://localhost:3000/auth/register \
+curl -X POST http://localhost:8000/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"test@test.com","username":"test","password":"Test123!","conformPassword":"Test123!"}'
 
 # Login (with test account)
-curl -X POST http://localhost:3000/auth/login \
+curl -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"test1@gmail.com","password":"password"}' \
   -c cookies.txt
 
 # Get current user
-curl http://localhost:3000/auth/me -b cookies.txt
+curl http://localhost:8000/api/auth/me -b cookies.txt
 ```
 
 ---

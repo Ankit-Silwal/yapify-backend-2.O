@@ -56,6 +56,7 @@ export const registerSocketHandlers = (io: Server) => {
           content
         )
         io.to(conversationId).emit("new-message", message);
+        console.log("Message was emtted",message);
 
       } catch (error) {
         console.error("Message error:", error);

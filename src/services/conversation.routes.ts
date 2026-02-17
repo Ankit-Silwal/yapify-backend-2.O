@@ -1,9 +1,10 @@
 import { Router } from "express";
 import { findPrivateConversation,createPrivateConversation,getUserConversationsList,getMessages } from "./conversation.services.js";
+import { checkSession } from "../middleware/checkSession.js";
 
 const router=Router();
 
-router.post('/private',async (req,res)=>{
+router.post('/private', checkSession, async (req,res)=>{
   const { targetUserId } = req.body;
   const userId = req.userId;
   if (!targetUserId || typeof targetUserId !== 'string' || !userId || typeof userId !== 'string') {
@@ -31,7 +32,7 @@ router.post('/private',async (req,res)=>{
     conversationId
   })
 })
-
+checkSession, 
 router.get("/", async (req, res) => {
 
   const userId = req.userId;
@@ -40,12 +41,15 @@ router.get("/", async (req, res) => {
 
   res.json(conversations);
 });
-router.get("/:conversationId", async (req, res) => {
+router.get("/:conversationId", checkSession, async (req, res) => {
 
   const { conversationId } = req.params;
   const page = Number(req.query.page) || 1;
 
   const messages = await getMessages(conversationId, page);
+  if(messages==null){
+    return res.json("No message");
+  }
 
   res.json(messages);
 });
